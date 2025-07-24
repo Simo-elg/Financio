@@ -1,18 +1,17 @@
 // Import React and necessary hooks/components
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 // Import UI components from React Native
-import { SafeAreaView, Text, StyleSheet, FlatList, View, TextInput, Button, Alert } from "react-native";
-// Import Picker for dropdown selection
-import { Picker } from "@react-native-picker/picker";
+import { Text, StyleSheet, FlatList, View, TextInput, Button, Pressable, TouchableOpacity, Animated, Easing, Alert } from "react-native";
 // Import navigation types for type safety
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../navigation/types";
-// Import services for data fetching and updating
-import { sectionService } from "../services/sectionService";
-import { transactionService } from "../services/transactionService";
 // Import models for type definitions
-import { Transaction } from "../models/Transaction";
+import { SubSection } from "../models/SubSection";
+import { subSectionService } from "../services/subSectionService";
+import { sectionService } from "../services/sectionService";
 import { Section } from "../models/Section";
+import { BlurView } from '@react-native-community/blur';
+import NewSection from "./NewSection"
 
 
 // Props type for navigation and route
@@ -21,266 +20,163 @@ type SectionDetailProps = NativeStackScreenProps<RootStackParamList, 'SectionDet
 // Main component for Section detail page
 export default function SectionDetail({ route, navigation }: SectionDetailProps) {
 
-    // State for transactions in this section
-    const [transactions, setTransactions] = useState<Transaction[]>([]);
+    const [isOpen, setIsOpen] = useState<Boolean>(false);
 
-    // State for all sections (used for transfer dropdown)
-    const [allSections, setAllSections] = useState<Section[]>([]);
+    const blurAnim = useRef(new Animated.Value(0)).current;
+        
+        useEffect(() => {
+            Animated.timing(blurAnim, {
+                toValue: isOpen ? 1 : 0,
+                duration: 400,
+                easing: Easing.inOut(Easing.ease),
+                useNativeDriver: true,
+            }).start();
+        }, [isOpen]);
 
-    // Get sectionId from navigation params
+    const [subSections, setSubSections] = useState<SubSection[]>([]);
+
     const { sectionId } = route.params;
 
-    // State for current section details
-    const [section, setSection] = useState<{id: number, name: string, monthlyBudget: number, currentBalance: number} | null>(null);
-
-    // State for new transaction amount input
-    const [newAmountText, setNewAmountText] = useState<string>("");
-
-    // State for transaction type (add/withdraw)
-    const [newType, setNewType] = useState<'ADD' | 'WITHDRAW'>('ADD');
-
-    // State for optional note input
-    const [newNoteText, setNewNoteText] = useState<string>('');
-
-    // State to toggle between simple and transfer mode
-    const [isTransferMode, setisTransferMode] = useState<boolean>(false);
-
-    // State for selected target section in transfer mode
-    const [targetSectionId, setTargetSectionId] = useState<number | null>(null);
-
-    // State for transfer amount input
-    const [transferAmountText, setTransferAmountText] = useState<string>("");
-
-
-    // Fetch section, transactions, and all sections on mount or when sectionId changes
     useEffect(() => {
-        const fetchData = async () => {
-            // Get current section details
-            const sectionData = await sectionService.getById(Number(sectionId));
-            setSection(sectionData);
-
-            // Get transactions for this section
-            const transactionData = await transactionService.getBySection(Number(sectionId));
-            setTransactions(transactionData);
-
-            // Get all sections for transfer dropdown
-            const all = await sectionService.getAll();
-            setAllSections(all);
+        const fetchData = async() => {
+            const subs = await subSectionService.getAllBySection(Number(sectionId))
+            setSubSections(subs);
         };
         fetchData();
-    }, [sectionId]); 
+    }, [sectionId]);
 
-    // Handler for adding a new transaction (add/withdraw)
-    const handleAddTransaction = async () => {
-        // Parse and validate amount
-        const newAmountNum = parseFloat(newAmountText);
-        if (isNaN(newAmountNum) || newAmountNum <= 0) {
-            alert("Montant invalide");
+    const createSubSection = async (name: string, isCore:0 | 1, monthlyBudgetText: string) => {
+
+        const newSubSectionmonthlyBudgetNum = Number(monthlyBudgetText);
+
+        if (!name || newSubSectionmonthlyBudgetNum <= 0) {
+            Alert.alert("Erreur", "Veuillez remplir tous les champs correctement.");
+            return;
+        } 
+                    
+        const all = await sectionService.getById(Number(sectionId));
+
+        const netNum = all.currentBalance; 
+
+        let totalB = 0;
+
+        for (const subSec of subSections) {
+            totalB += subSec.monthlyBudget || 0;
+        }
+
+        if (totalB + newSubSectionmonthlyBudgetNum > netNum) {
+            Alert.alert("Erreur", "Le budget dépasse ce que vous avez !");
             return;
         }
 
-        console.log("Adding transaction");
-
-        // Create new transaction object
-        const newTx = {
-            sectionId: Number(sectionId),
-            type: newType,
-            amount: newAmountNum,
-            date: new Date().toISOString(),
-            note: newNoteText
-        };
-
-        console.log("Transaction Successfully created");
-        console.log("New transaction:", newTx);
-
-        // Save transaction
-        await transactionService.create(newTx);
-        
-        // Add or withdraw amount from section balance
-        if (newType === 'ADD') {
-            await sectionService.updateBalance(Number(sectionId), newAmountNum);
-        }else {
-            await sectionService.updateBalance(Number(sectionId), -newAmountNum);
+        if (newSubSectionmonthlyBudgetNum > netNum) {
+            Alert.alert("Erreur", "Votre budget dépasse votre solde actuelle pour cette Section !");
+            return;
         }
 
-        // Refresh Section details 
-        const updatedSection = await sectionService.getById(Number(sectionId));
-        setSection(updatedSection);
-
-        // Refresh transactions list
-        const updated = await transactionService.getBySection(Number(sectionId));
-        setTransactions(updated);
-        console.log("The new updated transaction", updated);
-
-        // Reset input fields
-        setNewAmountText('');
-        setNewNoteText('');
-        setNewType('ADD'); 
+        try {
+            const created = await subSectionService.create({
+                name: name,
+                sectionId: Number(sectionId),
+                isCore: 0,
+                monthlyBudget: newSubSectionmonthlyBudgetNum,
+                currentBalance: newSubSectionmonthlyBudgetNum,
+            });
+            console.log("Sous-Section dans SectionDetail creéée :", created);
+            const update = await subSectionService.getAllBySection(Number(sectionId));
+            setSubSections(update);
+        } catch (error) {
+            console.error("Erreur à la création d'une nouvelle sous-section !");
+            Alert.alert("Erreur", "Impossible de créer la Sous-Section");
+            return;
+        }
     }
 
-    // Handler for transferring amount between sections
-    const handleTransfertAmount = async () => {
-        // Parse and validate transfer amount
-        const amount = parseFloat(transferAmountText);
-        if (isNaN(amount) || amount <= 0) {
-            alert("Montant invalide");
-            return;
-        }
-
-        // Ensure a target section is selected
-        if (!targetSectionId) {
-            Alert.alert("Erreur", "Veuillez sélectionner une section cible.");
-            return;
-        }
-
-        // Check if transfer amount exceeds current balance
-        if (amount > section!.currentBalance) {
-            Alert.alert("Erreur", "Le montant dépasse le solde actuel de la section.");
-            return;
-        }
-
-        // Update balances for both sections
-        await sectionService.updateBalance(section!.id, -amount);
-        await sectionService.updateBalance(targetSectionId, amount);
-
-        // Log withdrawal transaction in source section
-        await transactionService.create({
-            sectionId: section!.id,
-            type: "WITHDRAW",
-            amount,
-            date: new Date().toISOString(),
-            note: `Transfert vers ${allSections.find(s => s.id === targetSectionId)!.name}`
-        });
-
-        // Log add transaction in target section
-        await transactionService.create({
-            sectionId: targetSectionId,
-            type: "ADD",
-            amount,
-            date: new Date().toISOString(),
-            note: `Transfert depuis ${section!.name}`
-        });
-
-        // Refresh section and transactions
-        const updatedsection = await sectionService.getById(section!.id);
-        setSection(updatedsection);
-
-        const updatedTransactions = await transactionService.getBySection(section!.id);
-        setTransactions(updatedTransactions);
-
-        setTransferAmountText("");
-        setTargetSectionId(null);
-        setisTransferMode(false);
-
-    }
-
-    // Render UI
-    return (
-        // Main container
-        <SafeAreaView style={{ flex: 1, padding: 50}}>
-            {/* Page title */}
-            <Text style={{marginBottom: 20}}>Page de détail - Section #{sectionId}</Text>
-
-            {/* Show loading if section not loaded yet */}
-            {!section ? (
-                <Text>Loading...</Text>
-             ) : (
-                // Section details and transaction list
-                <View style={{flexDirection: 'column', gap: 10}}>
-                    {/* Section info */}
-                    <Text>Nom : {section?.name}</Text>
-                    <Text>Budget Mensuel : {section?.monthlyBudget}</Text>
-                    <Text>Solde actuel : {section?.currentBalance}</Text>
-                    {/* List of transactions */}
-                    <FlatList
-                        data={transactions}
-                        keyExtractor={t => t.id.toString()}
+    return(
+        <View style={styles.container} >
+            {subSections.length === 0 ? (
+                <Text>Aucune Sous-Section pour le moment</Text>
+            ) : (
+                <View style={styles.container} >
+                    <Text style={{ marginTop: 20, fontSize: 18 }}>Mes sous-sections</Text>
+                    <FlatList 
+                        data={subSections}
+                        keyExtractor={ss => ss.id.toString()}
                         renderItem={({ item }) => (
-                            <View>
-                                {/* Transaction details */}
-                                <Text>Type : {item.type} </Text>
-                                <Text>Amount : {item.amount} </Text>
-                                <Text>Date : {new Date(item.date).toLocaleDateString()} </Text>
-                                <Text>{item.note ? `Note : ("${item.note}")` : ""} </Text>
-                            </View>
+                            <TouchableOpacity
+                                onPress={() => 
+                                    navigation.navigate("SubSectionDetail", {
+                                        subSectionId: item.id.toString(),
+                                    })
+                                }>
+                                    <Text>{item.name}</Text>
+                                    <Text>
+                                        {item.currentBalance} / {item.monthlyBudget}
+                                    </Text>
+                            </TouchableOpacity>
                         )}>
                     </FlatList>
-
-                    {/* Toggle between simple and transfer mode */}
-                    <Button title={isTransferMode ? "Mode Simple" : "Mode Transfer"}
-                            onPress={() => setisTransferMode(prev => !prev)} ></Button>
-                    
-                    {/* Simple transaction mode UI */}
-                    {!isTransferMode && (
-                        <>
-                            {/* Transaction type picker */}
-                            <View>
-                                <Picker
-                                    selectedValue={newType}
-                                    onValueChange={value => setNewType(value)}>
-                                    <Picker.Item label="Ajouter" value="ADD"/>
-                                    <Picker.Item label="Retirer" value="WITHDRAW"/>
-                                </Picker>
-                            </View>
-                            {/* Amount and note input */}
-                            <View>
-                                <TextInput
-                                    placeholder="Montant"
-                                    keyboardType="numeric"
-                                    style={{ borderWidth: 1, borderColor: "#ccc", padding: 8, marginTop: 8 }}
-                                    value={newAmountText}
-                                    onChangeText={text => setNewAmountText(text)} >
-                                </TextInput>
-                                <TextInput
-                                    placeholder="Note (optionnel)"
-                                    keyboardType="default"
-                                    style={{ borderWidth: 1, borderColor: "#ccc", padding: 8, marginTop: 8 }}
-                                    value={newNoteText}
-                                    onChangeText={text => setNewNoteText(text)} >
-                                </TextInput>
-                            </View>
-                            {/* Add transaction button */}
-                            <View>
-                                <Button title="Ajouter" onPress={handleAddTransaction}></Button>
-                            </View>
-                        </>
-                    )}
-
-                    {/* Transfer mode UI */}
-                    {isTransferMode && (
-                            <>  
-                                {/* Target section picker for transfer */}
-                                <View>
-                                    <Picker
-                                        selectedValue={targetSectionId}
-                                        onValueChange={val => setTargetSectionId(val)}>
-                                            {allSections
-                                                .filter(s => s.id !== section!.id)
-                                                .map(s => (
-                                                    <Picker.Item key={s.id} label={s.name} value={s.id} />
-                                                ))
-                                            }
-                                    </Picker>
-                                </View>
-                                {/* Transfer amount input */}
-                                <View>
-                                    <TextInput
-                                        placeholder="Montant à transférer"
-                                        keyboardType="numeric"
-                                        style={{ borderWidth: 1, borderColor: "#ccc", padding: 8, marginTop: 8 }}
-                                        value={transferAmountText}
-                                        onChangeText={Number => setTransferAmountText(Number)} >
-                                    </TextInput>
-                                </View>
-                                {/* Transfer button */}
-                                <View>
-                                    <Button title="Transférer" onPress={handleTransfertAmount}></Button>
-                                </View>
-                            </>
-                        )}
-
                 </View>
             )}
-        </SafeAreaView>
+
+            <View>
+                <Button
+                    title="Créer une Sous-Section"
+                    onPress={() => setIsOpen(true)}></Button>
+            </View>
+
+            {/* Overlay flou animé */}
+            {isOpen && (
+                <Pressable
+                    style={StyleSheet.absoluteFillObject}
+                    onPress={() => setIsOpen(false)}
+                >
+                    <Animated.View
+                    pointerEvents="none"
+                    style={[StyleSheet.absoluteFillObject, { opacity: blurAnim }]}
+                    >
+                    <BlurView
+                        blurType="light"
+                        blurAmount={10}
+                        style={StyleSheet.absoluteFillObject}
+                    />
+                    </Animated.View>
+                </Pressable>
+                )}
+
+                {isOpen && (
+                                <NewSection
+                                    style={styles.modalContainer}
+                                    onSubmit={(name, isCore, monthlyBudget) => {
+                                        createSubSection(name, isCore=0, monthlyBudget);
+                                        setIsOpen(false);}}></NewSection>
+                            )}
+
+        </View>
     );
 }
+
+const styles = StyleSheet.create({
+
+    container : {
+        flex: 1,
+        padding: 20,
+    },
+
+    modalContainer: {
+        position: "absolute",
+        top: "20%",
+        left: "5%",
+        right: "5%",
+        backgroundColor: "#fff",
+        padding: 20,
+        borderRadius: 8,
+        // Ombre iOS
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 4,
+        // Élèvement Android
+        elevation: 5,
+    },
+})

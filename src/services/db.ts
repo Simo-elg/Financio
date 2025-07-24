@@ -29,6 +29,17 @@ export async function initDB(): Promise<void> {
   `);
 
   await db.execAsync(`
+    CREATE TABLE IF NOT EXISTS SubSection (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      sectionId INTEGER NOT NULL,
+      isCore INTEGER NOT NULL,
+      monthlyBudget REAL NOT NULL,
+      currentBalance REAL NOT NULL
+      );
+    `);
+
+  await db.execAsync(`
     CREATE TABLE IF NOT EXISTS Transactions (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         sectionId INTEGER NOT NULL,
