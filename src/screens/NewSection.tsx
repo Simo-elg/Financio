@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button, ViewStyle, StyleProp } from 'react-native';
+import { View, Text, TextInput, Button, ViewStyle, StyleProp, KeyboardAvoidingView, TouchableWithoutFeedback, Platform, Keyboard } from 'react-native';
 
 interface NewSectionProps {
     style?: StyleProp<ViewStyle>;
@@ -23,7 +23,14 @@ export default function NewSection({ style, onSubmit, onCancel }: NewSectionProp
 
     return (
         <View style={style}>
-                            <Text>Nouvelle Section</Text>                    
+             <KeyboardAvoidingView
+                style={{ flex: 1 }}
+                behavior={Platform.OS === "ios" ? "padding" : "height"}
+                keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20} // ajuste la valeur selon ton header/navbar
+            >
+                <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+                    <View style={{flex: 1}}>
+                        <Text>Nouvelle Section</Text>                    
                             <View>
                                 <Text>Nom de la Section</Text>
         
@@ -45,6 +52,10 @@ export default function NewSection({ style, onSubmit, onCancel }: NewSectionProp
                                     title="Valider"
                                     onPress={handleSubmit} ></Button>
                             </View>
+                    </View>
+                </TouchableWithoutFeedback>
+            </KeyboardAvoidingView>
+                            
         
                         </View>
     );

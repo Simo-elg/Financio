@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
-import { SafeAreaView, Text, View, TextInput, Button, Alert, Animated, Easing, StyleSheet, ScrollView, Pressable  } from "react-native";
+import { SafeAreaView, Text, View, TextInput, Button, Alert, Animated, Easing, StyleSheet, ScrollView, Pressable, KeyboardAvoidingView, TouchableWithoutFeedback, Platform, Keyboard } from "react-native";
 import { StackNavigationProp } from "@react-navigation/stack";
 import { sectionService } from "../services/sectionService";
 import { Section } from "../models/Section";
@@ -91,7 +91,7 @@ export default function Onboarding({ navigation }: OnboardingProps) {
 
         await sectionService.createDebitAmount(netNum);
 
-        console.log("Budgets mis à jour avec succès");
+        console.log("Budgets mis à jour avec succès, netNum :", netNum);
 
         navigation.replace('Dashboard');
 
@@ -174,57 +174,67 @@ export default function Onboarding({ navigation }: OnboardingProps) {
     return (
         <SafeAreaView style={{ flex: 1 }}>
             <ScrollView contentContainerStyle={{ padding: 20, flexGrow: 1 }}>
-                <View style={styles.container}>
-                    <Text>Veuillez entrer votre montant net :</Text>
-                    <TextInput
-                        keyboardType="numeric"
-                        placeholder="Entrez le montant net"
-                        style={{ borderWidth: 1, borderColor: "#ccc", padding: 8, marginTop: 8 }}
-                        value={netAmountText}
-                        onChangeText={text => setNetAmountText(text)}
-                    />
-                    <TextInput
-                        keyboardType="default"
-                        placeholder="Currency (ex. USD)"
-                        style={{ borderWidth: 1, borderColor: "#ccc", padding: 8, marginTop: 8 }}
-                        value={currencyText}
-                        onChangeText={text => setCurrencyText(text)}/>
-                </View>
-                    {sections.map(sec => (
-                        <View key={sec.id} style={styles.container}>
-                            <Text>Budget {sec.name} (mensuel)</Text>
-                            <TextInput 
-                                keyboardType="numeric"
-                                placeholder={`Budget ${sec.name}`} 
-                                value={budgets[sec.id]}
-                                style={styles.input}
-                                onChangeText={text => 
-                                    setBudgets(prev => ({ ...prev, [sec.id]: text}))
-                                } >
+                <KeyboardAvoidingView
+                                style={{ flex: 1 }}
+                                behavior={Platform.OS === "ios" ? "padding" : "height"}
+                                keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20} // ajuste la valeur selon ton header/navbar
+                            >
+                                <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+                                    <View style={{flex: 1}}>
+                                        <View style={styles.container}>
+                                            <Text>Veuillez entrer votre montant net :</Text>
+                                            <TextInput
+                                                keyboardType="numeric"
+                                                placeholder="Entrez le montant net"
+                                                style={{ borderWidth: 1, borderColor: "#ccc", padding: 8, marginTop: 8 }}
+                                                value={netAmountText}
+                                                onChangeText={text => setNetAmountText(text)}
+                                            />
+                                            <TextInput
+                                                keyboardType="default"
+                                                placeholder="Currency (ex. USD)"
+                                                style={{ borderWidth: 1, borderColor: "#ccc", padding: 8, marginTop: 8 }}
+                                                value={currencyText}
+                                                onChangeText={text => setCurrencyText(text)}/>
+                                        </View>
+                                            {sections.map(sec => (
+                                                <View key={sec.id} style={styles.container}>
+                                                    <Text>Budget {sec.name} (mensuel)</Text>
+                                                    <TextInput 
+                                                        keyboardType="numeric"
+                                                        placeholder={`Budget ${sec.name}`} 
+                                                        value={budgets[sec.id]}
+                                                        style={styles.input}
+                                                        onChangeText={text => 
+                                                            setBudgets(prev => ({ ...prev, [sec.id]: text}))
+                                                        } >
 
-                            </TextInput>
-                        </View>
-                    ))}
-                <View>
-                    <Button
-                        title="Soumettre"
-                        onPress={() => {
-                            handleSubmit();
-                        }}
-                    />
-                </View>
-                <View>
-                    <Button
-                        title="Repartir de zéro"
-                        onPress={handleZero}
-                    />
-                </View>
-                <View>
-                    <Button
-                        title="Créer une section "
-                        onPress={() => setIsOpen(!isOpen)}>
-                    </Button>
-                </View>
+                                                    </TextInput>
+                                                </View>
+                                            ))}
+                                        <View>
+                                            <Button
+                                                title="Soumettre"
+                                                onPress={() => {
+                                                    handleSubmit();
+                                                }}
+                                            />
+                                        </View>
+                                        <View>
+                                            <Button
+                                                title="Repartir de zéro"
+                                                onPress={handleZero}
+                                            />
+                                        </View>
+                                        <View>
+                                            <Button
+                                                title="Créer une section "
+                                                onPress={() => setIsOpen(!isOpen)}>
+                                            </Button>
+                                        </View>
+                                    </View>               
+                                </TouchableWithoutFeedback>
+                            </KeyboardAvoidingView>
             </ScrollView >
 
             {/* Overlay flou animé */}

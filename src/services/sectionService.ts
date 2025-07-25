@@ -77,10 +77,16 @@ export const sectionService = {
 
   createDebitAmount: async ( amount: number ): Promise<void> => {
     const db = getDB();
+
+    await db.runAsync(
+      'DELETE FROM Debitamount;'
+    );
+
     await db.runAsync(
         'INSERT INTO Debitamount (amount) VALUES (?);',
         amount
     );
+    console.log("Le montant débit net est :", amount);
   },
 
   getDebitAmount: async (): Promise<number> => {
@@ -91,6 +97,7 @@ export const sectionService = {
         FROM Debitamount
         LIMIT 1;`
     );
+    console.log("le montant débit voulu est :", row[0].amount);
     // Si pas de ligne, on renvoie 0 ou null selon ton besoin
     return row ? row[0].amount : 0;
     },

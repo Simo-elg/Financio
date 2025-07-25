@@ -1,7 +1,7 @@
 // Import React and necessary hooks/components
 import React, { useEffect, useState, useRef } from "react";
 // Import UI components from React Native
-import { Text, StyleSheet, FlatList, View, TextInput, Button, Pressable, TouchableOpacity, Animated, Easing, Alert } from "react-native";
+import { Text, StyleSheet, FlatList, View, Button, Pressable, TouchableOpacity, Animated, Easing, Alert, SafeAreaView } from "react-native";
 // Import navigation types for type safety
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../navigation/types";
@@ -9,9 +9,9 @@ import { RootStackParamList } from "../navigation/types";
 import { SubSection } from "../models/SubSection";
 import { subSectionService } from "../services/subSectionService";
 import { sectionService } from "../services/sectionService";
-import { Section } from "../models/Section";
 import { BlurView } from '@react-native-community/blur';
 import NewSection from "./NewSection"
+import Details from "../models/Details"
 
 
 // Props type for navigation and route
@@ -93,31 +93,40 @@ export default function SectionDetail({ route, navigation }: SectionDetailProps)
     }
 
     return(
-        <View style={styles.container} >
+        <SafeAreaView style={styles.container} >
+
             {subSections.length === 0 ? (
-                <Text>Aucune Sous-Section pour le moment</Text>
+                    <Details sectionId={Number(sectionId)}></Details>
             ) : (
-                <View style={styles.container} >
-                    <Text style={{ marginTop: 20, fontSize: 18 }}>Mes sous-sections</Text>
-                    <FlatList 
-                        data={subSections}
-                        keyExtractor={ss => ss.id.toString()}
-                        renderItem={({ item }) => (
-                            <TouchableOpacity
-                                onPress={() => 
-                                    navigation.navigate("SubSectionDetail", {
-                                        subSectionId: item.id.toString(),
-                                    })
-                                }>
-                                    <Text>{item.name}</Text>
-                                    <Text>
-                                        {item.currentBalance} / {item.monthlyBudget}
-                                    </Text>
-                            </TouchableOpacity>
-                        )}>
-                    </FlatList>
+                <View>
+                    {subSections.length === 0 ? (
+                        <Text>Aucune Sous-Section pour le moment</Text>
+                    ) : (
+                        <>
+                            <Text style={{ marginTop: 20, fontSize: 18 }}>Mes sous-sections</Text>
+                            <FlatList 
+                                data={subSections}
+                                keyExtractor={ss => ss.id.toString()}
+                                renderItem={({ item }) => (
+                                    <TouchableOpacity
+                                        onPress={() => 
+                                            navigation.navigate("SubSectionDetail", {
+                                                subSectionId: item.id.toString(),
+                                            })
+                                        }>
+                                            <Text>{item.name}</Text>
+                                            <Text>
+                                                {item.currentBalance} / {item.monthlyBudget}
+                                            </Text>
+                                    </TouchableOpacity>
+                                )}>
+                            </FlatList>
+                        </>
+                    )}
                 </View>
             )}
+
+            
 
             <View>
                 <Button
@@ -152,7 +161,7 @@ export default function SectionDetail({ route, navigation }: SectionDetailProps)
                                         setIsOpen(false);}}></NewSection>
                             )}
 
-        </View>
+        </SafeAreaView>
     );
 }
 
@@ -178,5 +187,12 @@ const styles = StyleSheet.create({
         shadowRadius: 4,
         // Élèvement Android
         elevation: 5,
+    },
+
+    first: {
+        flex: 1,
+        justifyContent: "center",
+        alignItems: "center",
+        margin: 150
     },
 })

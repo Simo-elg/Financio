@@ -59,8 +59,9 @@ export default function Dashboard({ navigation }: Props) {
             if (totalBudget + newSectionmonthlyBudgetNum > netNum) {
                 Alert.alert(
                     "Erreur",
-                    "Le budget de la nouvelle section dépasse le montant net disponible."
+                    "Le budget de la nouvelle section dépasse le montant net disponible !" 
                 );
+                console.error("Le budget de la nouvelle section dépasse le montant net disponible qui est de :", netNum)
                 return;
             }
     

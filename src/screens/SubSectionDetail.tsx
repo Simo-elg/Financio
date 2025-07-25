@@ -1,7 +1,7 @@
 // Import React and necessary hooks/components
 import React, { useEffect, useState } from "react";
 // Import UI components from React Native
-import { SafeAreaView, Text, StyleSheet, FlatList, View, TextInput, Button, Alert } from "react-native";
+import { SafeAreaView, Text, FlatList, View, TextInput, Button, Alert, KeyboardAvoidingView, TouchableWithoutFeedback, Platform, Keyboard } from "react-native";
 // Import Picker for dropdown selection
 import { Picker } from "@react-native-picker/picker";
 // Import navigation types for type safety
@@ -11,7 +11,6 @@ import { RootStackParamList } from "../navigation/types";
 import { transactionService } from "../services/transactionService";
 // Import models for type definitions
 import { Transaction } from "../models/Transaction";
-import { Section } from "../models/Section";
 import { SubSection } from "../models/SubSection";
 import { subSectionService } from "../services/subSectionService";  
 
@@ -234,26 +233,31 @@ export default function SubSectionDetail({ route, navigation }: SectionDetailPro
                                 </Picker>
                             </View>
                             {/* Amount and note input */}
-                            <View>
-                                <TextInput
-                                    placeholder="Montant"
-                                    keyboardType="numeric"
-                                    style={{ borderWidth: 1, borderColor: "#ccc", padding: 8, marginTop: 8 }}
-                                    value={newAmountText}
-                                    onChangeText={text => setNewAmountText(text)} >
-                                </TextInput>
-                                <TextInput
-                                    placeholder="Note (optionnel)"
-                                    keyboardType="default"
-                                    style={{ borderWidth: 1, borderColor: "#ccc", padding: 8, marginTop: 8 }}
-                                    value={newNoteText}
-                                    onChangeText={text => setNewNoteText(text)} >
-                                </TextInput>
-                            </View>
-                            {/* Add transaction button */}
-                            <View>
-                                <Button title="Ajouter" onPress={handleAddTransaction}></Button>
-                            </View>
+                                <KeyboardAvoidingView
+                                                style={{ flex: 1 }}
+                                                behavior={Platform.OS === "ios" ? "padding" : "height"}
+                                                keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20} // ajuste la valeur selon ton header/navbar
+                                            >
+                                                <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+                                                    <View>
+                                                        <TextInput
+                                                            placeholder="Montant"
+                                                            keyboardType="numeric"
+                                                            style={{ borderWidth: 1, borderColor: "#ccc", padding: 8, marginTop: 8 }}
+                                                            value={newAmountText}
+                                                            onChangeText={text => setNewAmountText(text)} >
+                                                        </TextInput>
+                                                        <TextInput
+                                                            placeholder="Note (optionnel)"
+                                                            keyboardType="default"
+                                                            style={{ borderWidth: 1, borderColor: "#ccc", padding: 8, marginTop: 8 }}
+                                                            value={newNoteText}
+                                                            onChangeText={text => setNewNoteText(text)} >
+                                                        </TextInput>
+                                                        <Button title={newType === 'ADD' ? "Ajouter" : "Retirer"} onPress={handleAddTransaction}></Button>
+                                                    </View>
+                                                </TouchableWithoutFeedback>
+                                            </KeyboardAvoidingView>
                         </>
                     )}
 
@@ -274,19 +278,24 @@ export default function SubSectionDetail({ route, navigation }: SectionDetailPro
                                     </Picker>
                                 </View>
                                 {/* Transfer amount input */}
-                                <View>
-                                    <TextInput
-                                        placeholder="Montant à transférer"
-                                        keyboardType="numeric"
-                                        style={{ borderWidth: 1, borderColor: "#ccc", padding: 8, marginTop: 8 }}
-                                        value={transferAmountText}
-                                        onChangeText={Number => setTransferAmountText(Number)} >
-                                    </TextInput>
-                                </View>
-                                {/* Transfer button */}
-                                <View>
-                                    <Button title="Transférer" onPress={handleTransfertAmount}></Button>
-                                </View>
+                                    <KeyboardAvoidingView
+                                                    style={{ flex: 1 }}
+                                                    behavior={Platform.OS === "ios" ? "padding" : "height"}
+                                                    keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20} // ajuste la valeur selon ton header/navbar
+                                                >
+                                                    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+                                                        <View>
+                                                            <TextInput
+                                                                placeholder="Montant à transférer"
+                                                                keyboardType="numeric"
+                                                                style={{ borderWidth: 1, borderColor: "#ccc", padding: 8, marginTop: 8 }}
+                                                                value={transferAmountText}
+                                                                onChangeText={Number => setTransferAmountText(Number)} >
+                                                            </TextInput>
+                                                            <Button title="Transférer" onPress={handleTransfertAmount}></Button>
+                                                        </View>
+                                                    </TouchableWithoutFeedback>
+                                                </KeyboardAvoidingView>
                             </>
                         )}
 
