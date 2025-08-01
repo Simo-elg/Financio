@@ -7,7 +7,7 @@ import { sectionService } from "../services/sectionService";
 import { useFocusEffect } from "@react-navigation/native";
 import NewSection from "./NewSection"
 import { BlurView } from '@react-native-community/blur';
-
+import ProgressBar from "../components/ProgressBar";    
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Dashboard'>;
 
@@ -92,6 +92,9 @@ export default function Dashboard({ navigation }: Props) {
 
     return (
         <SafeAreaView style={Style.container} >
+
+            <ProgressBar></ProgressBar>
+
             <Text>Mes sections</Text>
             <FlatList
                 data={sections}

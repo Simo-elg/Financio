@@ -3,7 +3,7 @@
 // Import React and necessary hooks/components
 import React, { useEffect, useState } from "react";
 // Import UI components from React Native
-import { SafeAreaView, Text, FlatList, View, TextInput, Button, Alert, KeyboardAvoidingView, TouchableWithoutFeedback, Platform, Keyboard } from "react-native";
+import { SafeAreaView, Text, FlatList, View, ScrollView, TextInput, Button, Alert, KeyboardAvoidingView, TouchableWithoutFeedback, Platform, Keyboard } from "react-native";
 // Import Picker for dropdown selection
 import { Picker } from "@react-native-picker/picker";
 // Import services for data fetching and updating
@@ -183,7 +183,7 @@ export default function SubSectionDetail({ sectionId }: SectionDetailProps) {
     // Render UI
     return (
         // Main container
-        <SafeAreaView style={{ flex: 1, padding: 16}}>
+        <SafeAreaView style={{ flex: 1, padding: 16, }}>
             <KeyboardAvoidingView
                 behavior={Platform.OS === "ios" ? "padding" : "height"}
                 keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20} // ajuste la valeur selon ton header/navbar
@@ -203,6 +203,7 @@ export default function SubSectionDetail({ sectionId }: SectionDetailProps) {
                                     <Text>Nom : {section?.name}</Text>
                                     <Text>Budget Mensuel : {section?.monthlyBudget}</Text>
                                     <Text>Solde actuel : {section?.currentBalance}</Text>
+
                                     {/* List of transactions */}
                                     <FlatList
                                         data={transactions}

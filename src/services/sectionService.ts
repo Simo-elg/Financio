@@ -43,11 +43,17 @@ export const sectionService = {
 
   updateBalance: async (id: number, delta: number) => {
     const db = getDB();
+
+    await db.runAsync(
+      'UPDATE Debitamount SET amount = amount + ?;',
+      delta
+    );
+
     await db.runAsync(
         'UPDATE Section SET currentBalance = currentBalance + ? WHERE id = ?;',
         delta,
         id
-    )
+    );
   },
 
   deleteAll: async () => {

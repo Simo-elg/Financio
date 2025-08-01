@@ -1,7 +1,7 @@
 // Import React and necessary hooks/components
 import React, { useEffect, useState } from "react";
 // Import UI components from React Native
-import { SafeAreaView, Text, FlatList, View, TextInput, Button, Alert, KeyboardAvoidingView, TouchableWithoutFeedback, Platform, Keyboard } from "react-native";
+import { SafeAreaView, Text, FlatList, View, ScrollView, TextInput, Button, Alert, KeyboardAvoidingView, TouchableWithoutFeedback, Platform, Keyboard } from "react-native";
 // Import Picker for dropdown selection
 import { Picker } from "@react-native-picker/picker";
 // Import navigation types for type safety
@@ -201,20 +201,21 @@ export default function SubSectionDetail({ route, navigation }: SectionDetailPro
                     <Text>Nom : {subSection?.name}</Text>
                     <Text>Budget Mensuel : {subSection?.monthlyBudget}</Text>
                     <Text>Solde actuel : {subSection?.currentBalance}</Text>
+
                     {/* List of transactions */}
-                    <FlatList
-                        data={transactions}
-                        keyExtractor={t => t.id.toString()}
-                        renderItem={({ item }) => (
-                            <View>
-                                {/* Transaction details */}
-                                <Text>Type : {item.type} </Text>
-                                <Text>Amount : {item.amount} </Text>
-                                <Text>Date : {new Date(item.date).toLocaleDateString()} </Text>
-                                <Text>{item.note ? `Note : ("${item.note}")` : ""} </Text>
-                            </View>
-                        )}>
-                    </FlatList>
+                        <FlatList
+                            data={transactions}
+                            keyExtractor={t => t.id.toString()}
+                            renderItem={({ item }) => (
+                                <View>
+                                    {/* Transaction details */}
+                                    <Text>Type : {item.type} </Text>
+                                    <Text>Amount : {item.amount} </Text>
+                                    <Text>Date : {new Date(item.date).toLocaleDateString()} </Text>
+                                    <Text>{item.note ? `Note : ("${item.note}")` : ""} </Text>
+                                </View>
+                            )}>
+                        </FlatList>
 
                     {/* Toggle between simple and transfer mode */}
                     <Button title={isTransferMode ? "Mode Simple" : "Mode Transfer"}

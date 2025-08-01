@@ -96,7 +96,7 @@ export default function SectionDetail({ route, navigation }: SectionDetailProps)
         <SafeAreaView style={styles.container} >
 
             {subSections.length === 0 ? (
-                    <Details sectionId={Number(sectionId)}></Details>
+                <Details sectionId={Number(sectionId)}></Details>
             ) : (
                 <View>
                     {subSections.length === 0 ? (
@@ -127,12 +127,9 @@ export default function SectionDetail({ route, navigation }: SectionDetailProps)
             )}
 
             
-
-            <View>
-                <Button
-                    title="Créer une Sous-Section"
-                    onPress={() => setIsOpen(true)}></Button>
-            </View>
+                <Pressable onPress={() => setIsOpen(true)} className="rounded-lg">
+                    <Text className="text-white text-lg font-bold">Créer une Sous-Section</Text>
+                </Pressable>
 
             {/* Overlay flou animé */}
             {isOpen && (
