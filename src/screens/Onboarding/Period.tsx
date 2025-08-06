@@ -28,6 +28,7 @@ export default function Onboarding({ navigation, route }: Props) {
             firstService.makeFPeriod(clientId, period)
         }
 
+        console.log('client id: ', clientId);
         console.log('ajout fonctionne : ', period);
     }
 

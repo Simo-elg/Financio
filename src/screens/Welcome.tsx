@@ -25,7 +25,7 @@ export default function Welcome({ navigation }: Props) {
                 Alert.alert('Client non trouvé !');
                 return;
             }
-            navigation.navigate('Dashboard', { clientId: client?.id })
+            navigation.navigate('Dashboard', { clientId: client.id })
         } catch (err) {
             console.log('Error: ', err)
         } finally {
@@ -34,7 +34,18 @@ export default function Welcome({ navigation }: Props) {
     }
 
     const handleFirst = async () => {
-        
+
+        const name = 'Mohamed';
+        const email = 'mohamed@gmail.com';
+        const pass = '123';
+
+        const client = await firstService.makeFClient({
+            Name: name,
+            Email: email,
+            Password: pass,
+        });
+        console.log("LOG  ID du client:", client.id); 
+        navigation.navigate("Period", { clientId: client.id });
     }
 
     return (

@@ -6,16 +6,21 @@ export const firstService = {
     makeFClient: async (cl: Omit<Client, 'id'>): Promise<Client> => {
         try {
             const db = getDB();
-            const result = db.runAsync(
-                'INSERT INTO Client (Name, Email, Password) VALUES (?, ?, ?);',
+            const result = await db.runAsync(
+                'INSERT INTO Client (Name, Email, Password, Period) VALUES (?, ?, ?, ?);',
                 cl.Name,
                 cl.Email,
-                cl.Password
+                cl.Password,
+                cl.Period ?? ""
             );
 
-            const id = (result as any).lastID;
+            const rows = await db.getAllAsync<{ rid: number }>(
+                'SELECT last_insert_rowid() AS rid;'
+            );
+            const id = rows[0].rid;
             console.log("✅ Client créée :", cl);
-            return { id, ...cl };
+            console.log('ID du client: ', id);
+            return { id, ...cl, Period: cl.Period ?? "" };
 
         } catch (err) {
 
@@ -56,10 +61,10 @@ export const firstService = {
         };
     },
 
-    getByCredendialts: async(email: string, pass: string): Promise<Client | null> => {
-      
+    getByCredendialts: async (email: string, pass: string): Promise<Client | null> => {
+
         const db = getDB();
-        const rows = await db.getAllAsync<{id: number, Name: string, Email: string, Password: string, Period: string}>(
+        const rows = await db.getAllAsync<{ id: number, Name: string, Email: string, Password: string, Period: string }>(
             'SELECT id, Name, Email, Password, Period FROM Client WHERE Email = ? AND Password = ?;',
             email,
             pass
@@ -72,7 +77,7 @@ export const firstService = {
         const row = rows[0];
         return {
             id: row.id,
-            Name: row.Name, 
+            Name: row.Name,
             Email: row.Email,
             Password: row.Password,
         };
@@ -86,6 +91,7 @@ export const firstService = {
             Period,
             id
         );
+        console.log('Client id; ', id);
     },
 
 
