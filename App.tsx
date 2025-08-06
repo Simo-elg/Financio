@@ -1,8 +1,10 @@
 // App.tsx
 import React, { useEffect, useState } from 'react';
-import { initDB, seedDefaultSections } from './src/services/db';
+import { initDB } from './src/services/db';
 import { SafeAreaView, Text, ActivityIndicator, StyleSheet } from 'react-native';
 import AppNavigator from './src/navigation/AppNavigator';
+import { Provider as PaperProvider } from 'react-native-paper';
+import "./global.css";
 
 export default function App() {
 
@@ -13,7 +15,6 @@ export default function App() {
     (async () => {
       try {
         await initDB();
-        await seedDefaultSections();
         setDbReady(true);
       } catch (err) {
         console.error('Erreur init BDD', err);
@@ -32,7 +33,11 @@ export default function App() {
   }
 
   // 3️⃣ Une fois prêt, on lance la navigation
-  return <AppNavigator />;
+  return (
+    <PaperProvider>
+      <AppNavigator />
+    </PaperProvider>
+  );
 }
 
 

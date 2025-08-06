@@ -1,0 +1,134 @@
+@startuml OnboardingFlow
+' ==============================
+' Onboarding Flow – Activity Diagram
+' ==============================
+
+skinparam backgroundColor #FFFFFF
+skinparam activity {
+  StartColor #7FDBFF
+  EndColor #7FDBFF
+  DiamondBorderColor #FF851B
+  DiamondBackgroundColor #FFDDC1
+  ActivityBorderColor #2ECC40
+  ActivityBackgroundColor #C8FACC
+}
+
+start
+:Sélectionner la *période de budget*\n(Mensuel / Hebdo / Quotidien);
+:Entrer le **revenu mensuel**;
+
+if (Abonnements mensuels ?) then (Oui)
+  repeat
+    :Saisir un abonnement\n*(nom & prix)*;
+  repeat while (Autre abonnement ?) is (Oui) not (Non)
+endif
+
+if (Créer des sections ?) then (Oui)
+  repeat
+    :Ajouter une section\n*(nom & allocation)*;
+  repeat while (Autre section ?) is (Oui) not (Non)
+endif
+
+:Calculer le montant\ndisponible restant;
+stop
+@enduml
+
+
+
+@startuml DataModel
+' ==============================
+' Core Data Model – Class Diagram
+' ==============================
+
+skinparam classAttributeIconSize 0
+skinparam class {
+  BackgroundColor<<entity>> #E0ECF8
+  BackgroundColor<<value>>  #F5ECCE
+  BorderColor #585858
+}
+
+class User <<entity>> {
+  +id: UUID
+  +budgetingPeriod: PeriodType
+  +salaryMonthly: Decimal
+  +lastCarryOver: Decimal
+}
+
+class Subscription <<entity>> {
+  +id: UUID
+  +name: String
+  +priceMonthly: Decimal
+}
+
+class Section <<entity>> {
+  +id: UUID
+  +name: String
+  +allocationAmount: Decimal
+  +allocationPeriod: PeriodType
+}
+
+class PeriodType <<value>> {
+  DAILY
+  WEEKLY
+  MONTHLY
+}
+
+User "1" -- "0..*" Subscription
+User "1" -- "0..*" Section
+@enduml
+
+
+
+@startuml BudgetComputation
+' ==============================
+' Budget Computation – Activity Diagram
+' ==============================
+
+skinparam backgroundColor #FFFFFF
+skinparam activity {
+  StartColor #7FDBFF
+  EndColor #7FDBFF
+  DiamondBorderColor #FF851B
+  DiamondBackgroundColor #FFDDC1
+  ActivityBorderColor #2ECC40
+  ActivityBackgroundColor #C8FACC
+}
+
+start
+:Lire **salaryMonthly** + **lastCarryOver**;
+:Sommer prix des\nabonnements mensuels;
+:Sommer allocations\n(des sections);
+:Calculer **soldeDispo** =\n(salary + carryOver) - (subs + sections);
+
+if (budgetingPeriod = DAILY) then (Jour)
+  :nbUnités = nbJoursMois;
+elseif (budgetingPeriod = WEEKLY) then (Semaine)
+  :nbUnités = 4 (≈);
+else (Mensuel)
+  :nbUnités = 1;
+endif
+
+:budgetUnitaire = soldeDispo / nbUnités;
+stop
+@enduml
+
+
+
+@startuml MonthlyRolloverSequence
+' ==============================
+' Monthly Rollover – Sequence Diagram
+' ==============================
+
+actor Scheduler as Cron
+participant "BudgetService" as Service
+database "SQLite DB" as DB
+participant Dashboard
+
+Cron -> Service: triggerMonthEnd()
+Service -> DB: getUserData()
+Service -> DB: getTransactions(currentMonth)
+Service -> Service: computeRemaining()\n(salary + carryOver - totalSpend)
+Service -> DB: updateUser(lastCarryOver = remaining)
+Service --> Cron: OK
+Service -> Dashboard: refresh()
+@enduml

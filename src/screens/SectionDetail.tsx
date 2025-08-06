@@ -9,7 +9,7 @@ import { RootStackParamList } from "../navigation/types";
 import { SubSection } from "../models/SubSection";
 import { subSectionService } from "../services/subSectionService";
 import { sectionService } from "../services/sectionService";
-import { BlurView } from '@react-native-community/blur';
+import { BlurView } from 'expo-blur';
 import NewSection from "./NewSection"
 import Details from "../models/Details"
 
@@ -23,40 +23,42 @@ export default function SectionDetail({ route, navigation }: SectionDetailProps)
     const [isOpen, setIsOpen] = useState<Boolean>(false);
 
     const blurAnim = useRef(new Animated.Value(0)).current;
-        
-        useEffect(() => {
-            Animated.timing(blurAnim, {
-                toValue: isOpen ? 1 : 0,
-                duration: 400,
-                easing: Easing.inOut(Easing.ease),
-                useNativeDriver: true,
-            }).start();
-        }, [isOpen]);
+
+    useEffect(() => {
+        Animated.timing(blurAnim, {
+            toValue: isOpen ? 1 : 0,
+            duration: 400,
+            easing: Easing.inOut(Easing.ease),
+            useNativeDriver: true,
+        }).start();
+    }, [isOpen]);
 
     const [subSections, setSubSections] = useState<SubSection[]>([]);
 
     const { sectionId } = route.params;
 
+    const { clientId } = route.params;
+
     useEffect(() => {
-        const fetchData = async() => {
+        const fetchData = async () => {
             const subs = await subSectionService.getAllBySection(Number(sectionId))
             setSubSections(subs);
         };
         fetchData();
     }, [sectionId]);
 
-    const createSubSection = async (name: string, isCore:0 | 1, monthlyBudgetText: string) => {
+    const createSubSection = async (name: string, isCore: 0 | 1, monthlyBudgetText: string) => {
 
         const newSubSectionmonthlyBudgetNum = Number(monthlyBudgetText);
 
         if (!name || newSubSectionmonthlyBudgetNum <= 0) {
             Alert.alert("Erreur", "Veuillez remplir tous les champs correctement.");
             return;
-        } 
-                    
-        const all = await sectionService.getById(Number(sectionId));
+        }
 
-        const netNum = all.currentBalance; 
+        const all = await sectionService.getById(Number(sectionId), clientId);
+
+        const netNum = all.currentBalance;
 
         let totalB = 0;
 
@@ -92,7 +94,7 @@ export default function SectionDetail({ route, navigation }: SectionDetailProps)
         }
     }
 
-    return(
+    return (
         <SafeAreaView style={styles.container} >
 
             {subSections.length === 0 ? (
@@ -104,20 +106,20 @@ export default function SectionDetail({ route, navigation }: SectionDetailProps)
                     ) : (
                         <>
                             <Text style={{ marginTop: 20, fontSize: 18 }}>Mes sous-sections</Text>
-                            <FlatList 
+                            <FlatList
                                 data={subSections}
                                 keyExtractor={ss => ss.id.toString()}
                                 renderItem={({ item }) => (
                                     <TouchableOpacity
-                                        onPress={() => 
+                                        onPress={() =>
                                             navigation.navigate("SubSectionDetail", {
                                                 subSectionId: item.id.toString(),
                                             })
                                         }>
-                                            <Text>{item.name}</Text>
-                                            <Text>
-                                                {item.currentBalance} / {item.monthlyBudget}
-                                            </Text>
+                                        <Text>{item.name}</Text>
+                                        <Text>
+                                            {item.currentBalance} / {item.monthlyBudget}
+                                        </Text>
                                     </TouchableOpacity>
                                 )}>
                             </FlatList>
@@ -126,10 +128,10 @@ export default function SectionDetail({ route, navigation }: SectionDetailProps)
                 </View>
             )}
 
-            
-                <Pressable onPress={() => setIsOpen(true)} className="rounded-lg">
-                    <Text className="text-white text-lg font-bold">Créer une Sous-Section</Text>
-                </Pressable>
+
+            <Pressable onPress={() => setIsOpen(true)} className="rounded-lg">
+                <Text className="text-white text-lg font-bold">Créer une Sous-Section</Text>
+            </Pressable>
 
             {/* Overlay flou animé */}
             {isOpen && (
@@ -138,25 +140,24 @@ export default function SectionDetail({ route, navigation }: SectionDetailProps)
                     onPress={() => setIsOpen(false)}
                 >
                     <Animated.View
-                    pointerEvents="none"
-                    style={[StyleSheet.absoluteFillObject, { opacity: blurAnim }]}
+                        pointerEvents="none"
+                        style={[StyleSheet.absoluteFillObject, { opacity: blurAnim }]}
                     >
-                    <BlurView
-                        blurType="light"
-                        blurAmount={10}
-                        style={StyleSheet.absoluteFillObject}
-                    />
+                        <BlurView
+                            style={StyleSheet.absoluteFillObject}
+                        />
                     </Animated.View>
                 </Pressable>
-                )}
+            )}
 
-                {isOpen && (
-                                <NewSection
-                                    style={styles.modalContainer}
-                                    onSubmit={(name, isCore, monthlyBudget) => {
-                                        createSubSection(name, isCore=0, monthlyBudget);
-                                        setIsOpen(false);}}></NewSection>
-                            )}
+            {isOpen && (
+                <NewSection
+                    style={styles.modalContainer}
+                    onSubmit={(name, isCore, monthlyBudget) => {
+                        createSubSection(name, isCore = 0, monthlyBudget);
+                        setIsOpen(false);
+                    }}></NewSection>
+            )}
 
         </SafeAreaView>
     );
@@ -164,7 +165,7 @@ export default function SectionDetail({ route, navigation }: SectionDetailProps)
 
 const styles = StyleSheet.create({
 
-    container : {
+    container: {
         flex: 1,
         padding: 20,
     },

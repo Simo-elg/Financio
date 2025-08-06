@@ -1,23 +1,35 @@
 import React, { useEffect, useState, useRef } from "react";
-import { SafeAreaView, StyleSheet, Text, FlatList, TouchableOpacity, View, Button, Pressable, Animated, Easing, Alert } from "react-native";
+import { SafeAreaView, Text, FlatList, TouchableOpacity, View, StyleSheet, Pressable, Animated, Easing, Alert } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../navigation/types";
 import { Section } from "../models/Section";
 import { sectionService } from "../services/sectionService";
 import { useFocusEffect } from "@react-navigation/native";
 import NewSection from "./NewSection"
-import { BlurView } from '@react-native-community/blur';
+import { BlurView } from 'expo-blur';
 import ProgressBar from "../components/ProgressBar";    
+import PlusButt from "../components/PlusButt";
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Dashboard'>;
 
-export default function Dashboard({ navigation }: Props) {
+export default function Dashboard({ navigation, route }: Props) {
+
+    const { clientId } = route.params;
+
+    const [currentTotalAmount, setCurrentTotalAmount] = useState<number>(0)
 
     const [sections, setSections] = useState<Section[]>([])
 
     const [isOpen, setIsOpen] = useState<Boolean>(false);
 
     const blurAnim = useRef(new Animated.Value(0)).current;
+
+    useEffect(() => {
+        (async () => {
+            const totalBalance = await sectionService.getTotalAmount(clientId);
+            setCurrentTotalAmount(totalBalance);
+        })();
+    }, [sections]);
     
     useEffect(() => {
         Animated.timing(blurAnim, {
@@ -32,7 +44,7 @@ export default function Dashboard({ navigation }: Props) {
         React.useCallback(() => {
             let isActive = true;
             (async () => {
-            const data = await sectionService.getAll();
+            const data = await sectionService.getAll(clientId);
             if (isActive) setSections(data);
             })();
             return () => { isActive = false; };
@@ -48,7 +60,7 @@ export default function Dashboard({ navigation }: Props) {
                 return;
             } 
             
-            const netNum = await sectionService.getDebitAmount();
+            const netNum = await sectionService.getDebitAmount(clientId);
 
             let totalBudget = 0; 
     
@@ -75,14 +87,17 @@ export default function Dashboard({ navigation }: Props) {
     
             try {
                 const created = await sectionService.create({
+                    clientId: clientId,
                     name: name,
                     isCore: 0,
                     monthlyBudget: newSectionmonthlyBudgetNum,
                     currentBalance: newSectionmonthlyBudgetNum,
+                    paymentD: 'none'
                 });     
                 console.log("Section dans Dashboard créée");
-                const updated = await sectionService.getAll();
+                const updated = await sectionService.getAll(clientId);
                 setSections(updated);
+                const upd = await sectionService.getTotalAmount(clientId);
             } catch (error) {
                 console.error("Erreur à l’insertion de la section :", error);
                 Alert.alert("Erreur", "Impossible de créer la section.");
@@ -91,94 +106,69 @@ export default function Dashboard({ navigation }: Props) {
         }
 
     return (
-        <SafeAreaView style={Style.container} >
+        <SafeAreaView className="flex-1 bg-white px-4 pt-6 pb-2">
 
-            <ProgressBar></ProgressBar>
+            <View className="rounded-xl mx-4 py-3 shadow-lg">
 
-            <Text>Mes sections</Text>
-            <FlatList
-                data={sections}
-                keyExtractor={item => item.id.toString()}
-                renderItem={({ item }) => (
-                    <TouchableOpacity
-                        style={{ padding: 12, borderWidth: 1, borderColor: 'blue'}}
-                        onPress={() => 
-                            navigation.navigate('SectionDetail', { sectionId: item.id.toString()})
-                        }>
-                        <Text style={{fontSize: 18}} >{item.name}</Text>
-                        <Text>
-                            {item.currentBalance} / {item.monthlyBudget}
-                        </Text>
-                    </TouchableOpacity>
-                )}
-            />
-            <View>
-                <Button
-                    title="Revenir à l'accueil"
-                    onPress={() => navigation.navigate('Onboarding')}>
+                <ProgressBar currentTotalAmount={currentTotalAmount}></ProgressBar>
 
-                </Button>
             </View>
 
-            <View>
-                <Button
-                    title="Créer une Section"
-                    onPress={() => setIsOpen(true)}></Button>
+            <View className="bg-gray-100 z-10 w-full rounded-2xl shadow-md p-4 mt-10">  
+
+                <Text className="text-gray-900 font-bold text-2xl mb-2">Mes sections</Text>
+                <FlatList
+                    className="my-3 max-h-64"
+                    data={sections}
+                    keyExtractor={item => item.id.toString()}
+                    renderItem={({ item }) => (
+                        <TouchableOpacity
+                            className="border border-gray-300 bg-white py-3 px-4 rounded-xl shadow-sm my-2"
+                            onPress={() => 
+                                navigation.navigate('SectionDetail', { sectionId: item.id.toString(), clientId: clientId})
+                            }>
+                            <Text className="text-lg font-semibold text-gray-800" >{item.name}</Text>
+                            <Text className="text-gray-600">
+                                {item.currentBalance} / {item.monthlyBudget}
+                            </Text>
+                        </TouchableOpacity>
+                    )}
+                />
+
             </View>
 
-            {/* Overlay flou animé */}
+            <PlusButt onPress={() => setIsOpen(true)} 
+                onGoHome={() => navigation.navigate('Welcome')} />
+
             {isOpen && (
-                <Pressable
-                    style={StyleSheet.absoluteFillObject}
-                    onPress={() => setIsOpen(false)}
-                >
-                    <Animated.View
-                    pointerEvents="none"
-                    style={[StyleSheet.absoluteFillObject, { opacity: blurAnim }]}
-                    >
-                    <BlurView
-                        blurType="light"
-                        blurAmount={10}
+                <View className="absolute inset-0 z-50 flex-1 justify-center items-center">
+                    <Pressable
                         style={StyleSheet.absoluteFillObject}
-                    />
-                    </Animated.View>
-                </Pressable>
-                )}
-
-            {isOpen && (
-                <NewSection
-                    style={styles.modalContainer}
-                    onSubmit={(name, isCore, monthlyBudget) => {
-                        createSection(name, isCore=0, monthlyBudget);
-                        setIsOpen(false);}}></NewSection>
+                            onPress={() => setIsOpen(false)}
+                        >
+                            <Animated.View
+                                pointerEvents="none"
+                                style={[StyleSheet.absoluteFillObject, { opacity: blurAnim }]}
+                            >
+                                <BlurView
+                                    style={{...StyleSheet.absoluteFillObject, flex: 1}}
+                                />
+                            </Animated.View>
+                    </Pressable>
+                    <View className="m-4">
+                        <NewSection
+                            onSubmit={(name, isCore, monthlyBudget) => {
+                            createSection(name, isCore=0, monthlyBudget);
+                            setIsOpen(false);}}>
+                        </NewSection>
+                    </View>
+                </View>
             )}
+
+            <View className="bg-black w-full h-12 rounded-t-xl mt-auto shadow-inner">
+
+            </View>
 
         </SafeAreaView>
     );
 }
-
-const Style = StyleSheet.create({
-    container : {
-        flex: 1,
-        padding: 20,
-    }
-})
-
-const styles = StyleSheet.create({
-    modalContainer: {
-        position: "absolute",
-        top: "20%",
-        left: "5%",
-        right: "5%",
-        backgroundColor: "#fff",
-        padding: 20,
-        borderRadius: 8,
-        // Ombre iOS
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.25,
-        shadowRadius: 4,
-        // Élèvement Android
-        elevation: 5,
-    },
-})

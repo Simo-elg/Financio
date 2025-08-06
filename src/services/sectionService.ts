@@ -1,6 +1,5 @@
 import { getDB } from './db';
 import { Section } from '../models/Section';
-import { get } from 'react-native/Libraries/TurboModule/TurboModuleRegistry';
 
 /**
  * Service pour gérer les opérations CRUD sur la table Section
@@ -9,10 +8,11 @@ export const sectionService = {
   /**
    * Récupère toutes les sections
    */
-  getAll: async (): Promise<Section[]> => {
+  getAll: async (clientId: number): Promise<Section[]> => {
     const db = getDB();
     const rows = await db.getAllAsync<Section>(
-      'SELECT * FROM Section;'
+      'SELECT * FROM Section WHERE clientId = ?;',
+      clientId
     );
     return rows;
   },
@@ -20,11 +20,12 @@ export const sectionService = {
   /**
    * Récupère une section par son ID
    */
-  getById: async (id: number): Promise<Section> => {
+  getById: async (id: number, clientId: number): Promise<Section> => {
     const db = getDB();
     const rows = await db.getAllAsync<Section>(
-      'SELECT * FROM Section WHERE id = ?;',
-      id
+      'SELECT * FROM Section WHERE id = ? AND clientId = ?;',
+      id,
+      clientId
     );
     if (rows.length > 0) {
       return rows[0];
@@ -32,27 +33,30 @@ export const sectionService = {
     throw new Error(`Section with id ${id} not found`);
   },
 
-  updateBudget: async (id: number, monthlyBudget: number) => {
+  updateBudget: async (id: number, monthlyBudget: number, clientId: number) => {
     const db = getDB();
     await db.runAsync(
-        'UPDATE Section SET monthlyBudget = ? WHERE id = ?;',
+        'UPDATE Section SET monthlyBudget = ? WHERE id = ? AND clientId = ?;',
         monthlyBudget,
-        id
+        id,
+        clientId
     );
   },
 
-  updateBalance: async (id: number, delta: number) => {
+  updateBalance: async (id: number, delta: number, clientId: number) => {
     const db = getDB();
 
     await db.runAsync(
-      'UPDATE Debitamount SET amount = amount + ?;',
-      delta
+      'UPDATE Debitamount SET newAmount = newAmount + ? WHERE clientId = ?;',
+      delta,
+      clientId
     );
 
     await db.runAsync(
-        'UPDATE Section SET currentBalance = currentBalance + ? WHERE id = ?;',
+        'UPDATE Section SET currentBalance = currentBalance + ? WHERE id = ? AND clientId = ?;',
         delta,
-        id
+        id,
+        clientId
     );
   },
 
@@ -66,11 +70,13 @@ export const sectionService = {
     try {
         const db = getDB();
         const result  = await db.runAsync(
-            'INSERT INTO Section (name, isCore, monthlyBudget, currentBalance) VALUES (?, ?, ?, ?);',
+            'INSERT INTO Section (clientId, name, isCore, monthlyBudget, currentBalance, paymentD) VALUES (?, ?, ?, ?, ?, ?);',
+            sec.clientId,
             sec.name,
             sec.isCore,
             sec.monthlyBudget,
-            sec.currentBalance
+            sec.currentBalance,
+            sec.paymentD
         ); 
         const id = (result as any).lastID;
         console.log("✅ Section créée :", sec);
@@ -81,31 +87,44 @@ export const sectionService = {
     } 
   },
 
-  createDebitAmount: async ( amount: number ): Promise<void> => {
+  createDebitAmount: async ( amount: number, id: number ): Promise<void> => {
     const db = getDB();
 
     await db.runAsync(
-      'DELETE FROM Debitamount;'
-    );
-
-    await db.runAsync(
-        'INSERT INTO Debitamount (amount) VALUES (?);',
+        'INSERT INTO Debitamount (amount, clientId, newAmount) VALUES (?, ?, ?);',
+        amount,
+        id,
         amount
     );
     console.log("Le montant débit net est :", amount);
+    console.log("Et le client id est: ", id);
   },
 
-  getDebitAmount: async (): Promise<number> => {
+  getDebitAmount: async (clientId: number): Promise<number> => {
     const db = getDB();
     // getAsync retourne un seul objet { amount: number } ou undefined
     const row = await db.getAllAsync<{ amount: number }>(
         `SELECT amount
-        FROM Debitamount
-        LIMIT 1;`
+       FROM Debitamount
+      WHERE clientId = ?
+      ORDER BY ROWID DESC
+      LIMIT 1;`,
+      clientId
     );
     console.log("le montant débit voulu est :", row[0].amount);
     // Si pas de ligne, on renvoie 0 ou null selon ton besoin
     return row ? row[0].amount : 0;
     },
+
+  getTotalAmount: async (clientId: number): Promise<number> => {
+    const db = getDB();
+
+    const row = await db.getAllAsync< {total : number }>(
+      'SELECT SUM(currentBalance) AS total FROM Section WHERE clientId = ?;',
+      clientId
+    );
+
+    return row[0]?.total ?? 0;
+  }
 
 }

@@ -14,17 +14,31 @@ export async function initDB(): Promise<void> {
   }
 
   await db.execAsync(`
+    CREATE TABLE IF NOT EXISTS Client (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      Name TEXT NOT NULL,
+      Email TEXT NOT NULL,
+      Password TEXT NOT NULL,
+      Period TEXT NOT NULL
+      );`
+    );
+
+  await db.execAsync(`
     CREATE TABLE IF NOT EXISTS Debitamount (
-      amount REAL NOT NULL);`);
+      amount REAL NOT NULL,
+      clientId INTEGER NOT NULL,
+      newAmount REAL NOT NULL);`);
 
   // Création de la table Section
   await db.execAsync(`
     CREATE TABLE IF NOT EXISTS Section (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
+      clientId INTEGER NOT NULL,
       name TEXT NOT NULL,
       isCore INTEGER NOT NULL,
       monthlyBudget REAL NOT NULL,
-      currentBalance REAL NOT NULL
+      currentBalance REAL NOT NULL,
+      paymentD TEXT NOT NULL
     );
   `);
 
@@ -53,29 +67,29 @@ export async function initDB(): Promise<void> {
 /**
  * Insère les sections de base si la table Section est vide
  */
-export async function seedDefaultSections(): Promise<void> {
-  // Vérifier le nombre de lignes
-  const rows = await db.getAllAsync<{ count: number }>(
-    'SELECT COUNT(*) AS count FROM Section;'
-  );
-  const count = rows[0]?.count ?? 0;
-  if (count === 0) {
-    const defaultSections = [
-      { name: 'Abonnements', isCore: 1 },
-      { name: 'Food',        isCore: 1 },
-      { name: 'Autres',      isCore: 1 }
-    ];
-    // Insertion des sections de base
-    for (const section of defaultSections) {
-      await db.runAsync(
-        `INSERT INTO Section (name, isCore, monthlyBudget, currentBalance)
-         VALUES (?, ?, 0, 0);`,
-        section.name,
-        section.isCore
-      );
-    }
-  }
-}
+// export async function seedDefaultSections(): Promise<void> {
+//   // Vérifier le nombre de lignes
+//   const rows = await db.getAllAsync<{ count: number }>(
+//     'SELECT COUNT(*) AS count FROM Section;'
+//   );
+//   const count = rows[0]?.count ?? 0;
+//   if (count === 0) {
+//     const defaultSections = [
+//       { name: 'Abonnements', isCore: 1 },
+//       { name: 'Food',        isCore: 1 },
+//       { name: 'Autres',      isCore: 1 }
+//     ];
+//     // Insertion des sections de base
+//     for (const section of defaultSections) {
+//       await db.runAsync(
+//         `INSERT INTO Section (name, isCore, monthlyBudget, currentBalance)
+//          VALUES (?, ?, 0, 0);`,
+//         section.name,
+//         section.isCore
+//       );
+//     }
+//   }
+// }
 
 /**
  * Renvoie l'instance de la base, après initDB()

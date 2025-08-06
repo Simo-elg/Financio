@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Button, ViewStyle, StyleProp, KeyboardAvoidingView, TouchableWithoutFeedback, Platform, Keyboard } from 'react-native';
+import { View, Text, TextInput, Pressable, ViewStyle, StyleProp, KeyboardAvoidingView, TouchableWithoutFeedback, Platform, Keyboard } from 'react-native';
 
 interface NewSectionProps {
     style?: StyleProp<ViewStyle>;
@@ -22,41 +22,40 @@ export default function NewSection({ style, onSubmit, onCancel }: NewSectionProp
     }
 
     return (
-        <View style={style}>
-             <KeyboardAvoidingView
-                style={{ flex: 1 }}
+        <View className='self-center'>
+            <KeyboardAvoidingView
                 behavior={Platform.OS === "ios" ? "padding" : "height"}
                 keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20} // ajuste la valeur selon ton header/navbar
             >
                 <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-                    <View style={{flex: 1}}>
+                    <View className='self-center m-10'>
                         <Text>Nouvelle Section</Text>                    
-                            <View>
+                            <View className='m-5'>
                                 <Text>Nom de la Section</Text>
         
                                 <TextInput
+                                    className='my-3 border-2 px-3 py-2 rounded-full'
                                     placeholder="Entrez le nom de la section"
-                                    style={{ borderWidth: 1, borderColor: "#ccc", padding: 8, marginTop: 8 }}
                                     value={newSection.name}
                                     onChangeText={text => setNewSection({ ...newSection, name: text })} >
                                 </TextInput>
                                 <Text>Budget idéal (mensuel)</Text>
                                 <TextInput
+                                    className='my-3 border-2 px-3 py-2 rounded-full'
                                     keyboardType="numeric"
                                     placeholder="Entrez le budget que vous souhaitez allouer à cette section"
-                                    style={{ borderWidth: 1, borderColor: "#ccc", padding: 8, marginTop: 8 }}
                                     value={newSection.monthlyBudget}
                                     onChangeText={text => setNewSection({ ...newSection, monthlyBudget: text })} >
                                 </TextInput>
-                                <Button
-                                    title="Valider"
-                                    onPress={handleSubmit} ></Button>
+                                <Pressable
+                                    className='self-center'
+                                    onPress={handleSubmit} >
+                                    <Text className='rounded-2xl border-2 px-3 py-2'> Valider </Text>
+                                </Pressable>
                             </View>
                     </View>
                 </TouchableWithoutFeedback>
-            </KeyboardAvoidingView>
-                            
-        
-                        </View>
+            </KeyboardAvoidingView> 
+        </View>
     );
 }

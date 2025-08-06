@@ -7,13 +7,16 @@ import { sectionService } from '../services/sectionService'
 type ProgressCircleProps = {
   size?: number         // diamètre du cercle
   thickness?: number    // épaisseur de la barre
+  currentTotalAmount : number
 }
 
 export default function ProgressCircle({
   size = 120,
   thickness = 8,
+  currentTotalAmount
 }: ProgressCircleProps) {
-  const [currentTotalAmount, setCurrentTotalAmount] = useState<number>(0)
+
+  const [baseAmount, setBaseAmount] = useState<number>(0);
 
   useFocusEffect(
     React.useCallback(() => {
@@ -21,10 +24,8 @@ export default function ProgressCircle({
 
       (async () => {
         try {
-          const amountNum = await sectionService.getDebitAmount();
-          if (isActive) {
-            setCurrentTotalAmount(amountNum);
-          }
+          const base = await sectionService.getDebitAmount();
+          setBaseAmount(base);
         } catch (err) {
           console.error('Erreur getDebitAmount:', err);
         }
@@ -34,10 +35,9 @@ export default function ProgressCircle({
       return () => {
         isActive = false;
       };
-    }, [])
+    }, [currentTotalAmount])
   );
 
-  const baseAmount = currentTotalAmount;
   const progress = baseAmount > 0 ? Math.min(currentTotalAmount / baseAmount, 1) : 0
   const barColor = progress <= 0.5 ? 'red' : 'green'
 
