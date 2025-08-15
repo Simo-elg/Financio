@@ -3,11 +3,6 @@ import { SafeAreaView, Text, View, TextInput, Pressable, Alert, Animated, Easing
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
 import { Picker } from "@react-native-picker/picker";
-import { sectionService } from "../../services/sectionService";
-import { Section } from "../../models/Section";
-import { transactionService } from "../../services/transactionService";
-import NewSection from "../NewSection";
-import { BlurView } from 'expo-blur';
 import { firstService } from "../../services/firstService";
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Period'>;

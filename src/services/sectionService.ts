@@ -1,5 +1,6 @@
 import { getDB } from './db';
 import { Section } from '../models/Section';
+import * as SQLite from 'expo-sqlite';
 
 /**
  * Service pour gérer les opérations CRUD sur la table Section
@@ -36,10 +37,10 @@ export const sectionService = {
   updateBudget: async (id: number, monthlyBudget: number, clientId: number) => {
     const db = getDB();
     await db.runAsync(
-        'UPDATE Section SET monthlyBudget = ? WHERE id = ? AND clientId = ?;',
-        monthlyBudget,
-        id,
-        clientId
+      'UPDATE Section SET monthlyBudget = ? WHERE id = ? AND clientId = ?;',
+      monthlyBudget,
+      id,
+      clientId
     );
   },
 
@@ -53,10 +54,10 @@ export const sectionService = {
     );
 
     await db.runAsync(
-        'UPDATE Section SET currentBalance = currentBalance + ? WHERE id = ? AND clientId = ?;',
-        delta,
-        id,
-        clientId
+      'UPDATE Section SET currentBalance = currentBalance + ? WHERE id = ? AND clientId = ?;',
+      delta,
+      id,
+      clientId
     );
   },
 
@@ -68,33 +69,33 @@ export const sectionService = {
 
   create: async (sec: Omit<Section, 'id'>): Promise<Section> => {
     try {
-        const db = getDB();
-        const result  = await db.runAsync(
-            'INSERT INTO Section (clientId, name, isCore, monthlyBudget, currentBalance, paymentD) VALUES (?, ?, ?, ?, ?, ?);',
-            sec.clientId,
-            sec.name,
-            sec.isCore,
-            sec.monthlyBudget,
-            sec.currentBalance,
-            sec.paymentD
-        ); 
-        const id = (result as any).lastID;
-        console.log("✅ Section créée :", sec);
-        return { id, ...sec};
+      const db = getDB();
+      const result = await db.runAsync(
+        'INSERT INTO Section (clientId, name, isCore, monthlyBudget, currentBalance, paymentD) VALUES (?, ?, ?, ?, ?, ?);',
+        sec.clientId,
+        sec.name,
+        sec.isCore,
+        sec.monthlyBudget,
+        sec.currentBalance,
+        sec.paymentD
+      );
+      const id = (result as any).lastID;
+      console.log("✅ Section créée :", sec);
+      return { id, ...sec };
     } catch (error) {
-        console.error("❌ Erreur à l’insertion de la section :", error);
-        throw new Error("Failed to create section");
-    } 
+      console.error("❌ Erreur à l’insertion de la section :", error);
+      throw new Error("Failed to create section");
+    }
   },
 
-  createDebitAmount: async ( amount: number, id: number ): Promise<void> => {
+  createDebitAmount: async (amount: number, id: number): Promise<void> => {
     const db = getDB();
 
     await db.runAsync(
-        'INSERT INTO Debitamount (amount, clientId, newAmount) VALUES (?, ?, ?);',
-        amount,
-        id,
-        amount
+      'INSERT INTO Debitamount (amount, clientId, newAmount) VALUES (?, ?, ?);',
+      amount,
+      id,
+      amount
     );
     console.log("Le montant débit net est :", amount);
     console.log("Et le client id est: ", id);
@@ -102,29 +103,26 @@ export const sectionService = {
 
   getDebitAmount: async (clientId: number): Promise<number> => {
     const db = getDB();
-    // getAsync retourne un seul objet { amount: number } ou undefined
-    const row = await db.getAllAsync<{ amount: number }>(
-        `SELECT amount
-       FROM Debitamount
-      WHERE clientId = ?
-      ORDER BY ROWID DESC
-      LIMIT 1;`,
-      clientId
-    );
-    console.log("le montant débit voulu est :", row[0].amount);
-    // Si pas de ligne, on renvoie 0 ou null selon ton besoin
-    return row ? row[0].amount : 0;
-    },
+    const sql = `
+    SELECT amount
+    FROM Debitamount
+    WHERE clientId = ?
+    ORDER BY id DESC
+    LIMIT 1;
+  `;
+    const rows = await db.getAllAsync<{ amount: number }>(sql, [clientId]);
+    return rows.length ? rows[0].amount : 0;
+  },
 
   getTotalAmount: async (clientId: number): Promise<number> => {
     const db = getDB();
 
-    const row = await db.getAllAsync< {total : number }>(
+    const row = await db.getAllAsync<{ total: number }>(
       'SELECT SUM(currentBalance) AS total FROM Section WHERE clientId = ?;',
       clientId
     );
 
     return row[0]?.total ?? 0;
-  }
+  },
 
 }

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { View, Text, TextInput, Pressable, Alert } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../navigation/types";
@@ -50,7 +50,7 @@ export default function Welcome({ navigation }: Props) {
 
     return (
         <View className="flex-1 bg-white px-6 justify-center">
-            <Text className="text-3xl font-bold text-center mb-8">Inscription</Text>
+            <Text className="text-3xl font-bold text-center mb-8">Se connecter</Text>
 
             <View className="mb-4">
                 <Text className="mb-1 text-gray-700">Email</Text>
