@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, Pressable, ViewStyle, StyleProp, KeyboardAvoidingView, TouchableWithoutFeedback, Platform, Keyboard } from 'react-native';
 
+
 interface NewSectionProps {
     style?: StyleProp<ViewStyle>;
     onSubmit: (name: string, isCore: 0, monthlyBudget: string) => void;

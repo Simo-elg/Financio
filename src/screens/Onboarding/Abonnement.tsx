@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import {
-    SafeAreaView,
     View,
     Text,
     TextInput,
@@ -13,6 +12,7 @@ import {
     Keyboard,
     Alert,
 } from "react-native";
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Picker } from "@react-native-picker/picker";
 import { sectionService } from "../../services/sectionService";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
@@ -111,7 +111,7 @@ export default function Abonnement({ navigation, route }: Props) {
     }
 
     return (
-        <SafeAreaView className="flex-1 bg-gray-50">
+        <SafeAreaView className="flex-1 bg-gray-50 pt-8">
             <KeyboardAvoidingView
                 behavior={Platform.OS === "ios" ? "padding" : "height"}
                 className="flex-1"

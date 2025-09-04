@@ -8,6 +8,7 @@ import Sections from '../screens/Onboarding/Sections'
 import Dashboard from '../screens/Dashboard';
 import SectionDetail from '../screens/SectionDetail';
 import Welcome from '../screens/Welcome';
+import SignUp from '../screens/SignUp';
 import SubSectionDetail from '../screens/SubSectionDetail'
 
 const stack = createNativeStackNavigator<RootStackParamList>();
@@ -19,6 +20,7 @@ export default function AppNavigator() {
                 initialRouteName='Welcome'
                 screenOptions={{headerShown: false}}>
                 <stack.Screen name='Welcome' component={Welcome}/>
+                <stack.Screen name='SignUp' component={SignUp}/>
                 <stack.Screen name='Period' component={Period}/>
                 <stack.Screen name='Revenue' component={Revenue}/>
                 <stack.Screen name='Abonnement' component={Abonnement}/>

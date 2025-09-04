@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
-import { SafeAreaView, Text, FlatList, TouchableOpacity, View, StyleSheet, Pressable, Animated, Easing, Alert } from "react-native";
+import { Text, FlatList, TouchableOpacity, View, StyleSheet, Pressable, Animated, Easing, Alert } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../navigation/types";
 import { Section } from "../models/Section";
@@ -9,6 +9,8 @@ import NewSection from "./NewSection"
 import { BlurView } from 'expo-blur';
 import ProgressBar from "../components/ProgressBar";    
 import PlusButt from "../components/PlusButt";
+import { SafeAreaView } from 'react-native-safe-area-context';
+
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Dashboard'>;
 
@@ -26,7 +28,7 @@ export default function Dashboard({ navigation, route }: Props) {
 
     useEffect(() => {
         (async () => {
-            const totalBalance = await sectionService.getTotalAmount(clientId);
+            const totalBalance = await sectionService.getDebitAmount(clientId);
             setCurrentTotalAmount(totalBalance);
         })();
     }, [sections]);
@@ -110,7 +112,7 @@ export default function Dashboard({ navigation, route }: Props) {
 
             <View className="rounded-xl mx-4 py-3 shadow-lg">
 
-                <ProgressBar currentTotalAmount={currentTotalAmount}></ProgressBar>
+                <ProgressBar currentTotalAmount={currentTotalAmount} clientId={clientId}></ProgressBar>
 
             </View>
 

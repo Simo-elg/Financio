@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import {
-    SafeAreaView,
     View,
     Text,
     TextInput,
@@ -16,6 +15,7 @@ import {
 import { sectionService } from "../../services/sectionService";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Sections'>;
 

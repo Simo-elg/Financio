@@ -16,10 +16,11 @@ import { sectionService } from "../services/sectionService";
 // Props type for navigation and route
 type SectionDetailProps = {
     sectionId: number;
+    clientId: number;
 }
 
 // Main component for Section detail page
-export default function SubSectionDetail({ sectionId }: SectionDetailProps) {
+export default function SubSectionDetail({ sectionId, clientId }: SectionDetailProps) {
 
     // State for transactions in this section
     const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -55,7 +56,7 @@ export default function SubSectionDetail({ sectionId }: SectionDetailProps) {
             const id = Number(sectionId);
 
             // 1. Charger la Section (un seul objet)
-            const ss = await sectionService.getById(id);
+            const ss = await sectionService.getById(id, clientId);
             if (!ss) {
             Alert.alert("Erreur", "Section introuvable");
             return;
@@ -67,7 +68,7 @@ export default function SubSectionDetail({ sectionId }: SectionDetailProps) {
             setTransactions(txs);
 
             // 3. Ses “frères/sœurs”
-            const siblings = await sectionService.getAll();
+            const siblings = await sectionService.getAll(clientId);
             setAllSections(siblings);
         };
         load();
@@ -109,11 +110,10 @@ export default function SubSectionDetail({ sectionId }: SectionDetailProps) {
         }
 
         // Refresh Section details 
-        const updatedSection = await sectionService.getById(Number(sectionId));
+        const updatedSection = await sectionService.getById(Number(sectionId), clientId);
         setSection(updatedSection);
 
         // Refresh transactions list
-        const ss = await sectionService.getById(Number(sectionId));
         const updated = await transactionService.getBySection(sectionId);
         setTransactions(updated);
         console.log("The new updated transaction", updated);
@@ -168,7 +168,7 @@ export default function SubSectionDetail({ sectionId }: SectionDetailProps) {
         });
 
         // Refresh section and transactions
-        const updatedsection = await sectionService.getById(section!.id);
+        const updatedsection = await sectionService.getById(section!.id, clientId);
         setSection(updatedsection);
 
         const updatedTransactions = await transactionService.getBySection(section!.id);

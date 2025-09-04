@@ -1,7 +1,7 @@
 // Import React and necessary hooks/components
 import React, { useEffect, useState, useRef } from "react";
 // Import UI components from React Native
-import { Text, StyleSheet, FlatList, View, Button, Pressable, TouchableOpacity, Animated, Easing, Alert, SafeAreaView } from "react-native";
+import { Text, StyleSheet, FlatList, View, Pressable, TouchableOpacity, Animated, Easing, Alert, SafeAreaView } from "react-native";
 // Import navigation types for type safety
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../navigation/types";
@@ -10,8 +10,8 @@ import { SubSection } from "../models/SubSection";
 import { subSectionService } from "../services/subSectionService";
 import { sectionService } from "../services/sectionService";
 import { BlurView } from 'expo-blur';
-import NewSection from "./NewSection"
-import Details from "../models/Details"
+import NewSection from "./NewSection";
+import Details from "../models/Details";
 
 
 // Props type for navigation and route
@@ -35,17 +35,19 @@ export default function SectionDetail({ route, navigation }: SectionDetailProps)
 
     const [subSections, setSubSections] = useState<SubSection[]>([]);
 
-    const { sectionId } = route.params;
+    const { sectionId, clientId } = route.params;
 
-    const { clientId } = route.params;
+    const sid = Number(sectionId);
+
+    const cid = Number(clientId);
 
     useEffect(() => {
         const fetchData = async () => {
-            const subs = await subSectionService.getAllBySection(Number(sectionId))
+            const subs = await subSectionService.getAllBySection(sid);
             setSubSections(subs);
         };
         fetchData();
-    }, [sectionId]);
+    }, [sid]);
 
     const createSubSection = async (name: string, isCore: 0 | 1, monthlyBudgetText: string) => {
 
@@ -56,7 +58,7 @@ export default function SectionDetail({ route, navigation }: SectionDetailProps)
             return;
         }
 
-        const all = await sectionService.getById(Number(sectionId), clientId);
+        const all = await sectionService.getById(Number(sid), cid);
 
         const netNum = all.currentBalance;
 
@@ -79,13 +81,13 @@ export default function SectionDetail({ route, navigation }: SectionDetailProps)
         try {
             const created = await subSectionService.create({
                 name: name,
-                sectionId: Number(sectionId),
+                sectionId: sid,
                 isCore: 0,
                 monthlyBudget: newSubSectionmonthlyBudgetNum,
                 currentBalance: newSubSectionmonthlyBudgetNum,
             });
             console.log("Sous-Section dans SectionDetail creéée :", created);
-            const update = await subSectionService.getAllBySection(Number(sectionId));
+            const update = await subSectionService.getAllBySection(sid);
             setSubSections(update);
         } catch (error) {
             console.error("Erreur à la création d'une nouvelle sous-section !");
@@ -98,7 +100,7 @@ export default function SectionDetail({ route, navigation }: SectionDetailProps)
         <SafeAreaView style={styles.container} >
 
             {subSections.length === 0 ? (
-                <Details sectionId={Number(sectionId)}></Details>
+                <Details sectionId={sid} clientId={cid}></Details>
             ) : (
                 <View>
                     {subSections.length === 0 ? (
@@ -113,7 +115,7 @@ export default function SectionDetail({ route, navigation }: SectionDetailProps)
                                     <TouchableOpacity
                                         onPress={() =>
                                             navigation.navigate("SubSectionDetail", {
-                                                subSectionId: item.id.toString(),
+                                                subSectionId: item.id.toString(), clientId: cid,
                                             })
                                         }>
                                         <Text>{item.name}</Text>

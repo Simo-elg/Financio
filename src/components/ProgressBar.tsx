@@ -8,12 +8,14 @@ type ProgressCircleProps = {
   size?: number         // diamètre du cercle
   thickness?: number    // épaisseur de la barre
   currentTotalAmount : number
+  clientId: number
 }
 
 export default function ProgressCircle({
   size = 120,
   thickness = 8,
-  currentTotalAmount
+  currentTotalAmount, 
+  clientId
 }: ProgressCircleProps) {
 
   const [baseAmount, setBaseAmount] = useState<number>(0);
@@ -24,7 +26,7 @@ export default function ProgressCircle({
 
       (async () => {
         try {
-          const base = await sectionService.getDebitAmount();
+          const base = await sectionService.getDebitAmount(clientId);
           setBaseAmount(base);
         } catch (err) {
           console.error('Erreur getDebitAmount:', err);

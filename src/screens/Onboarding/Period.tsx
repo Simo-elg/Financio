@@ -1,9 +1,11 @@
 import React, { useState } from "react";
-import { SafeAreaView, Text, View, TextInput, Pressable, Alert, Animated, Easing, StyleSheet, ScrollView, KeyboardAvoidingView, TouchableWithoutFeedback, Platform, Keyboard } from "react-native";
+import { Text, View, TextInput, Pressable, Alert, Animated, Easing, StyleSheet, ScrollView, KeyboardAvoidingView, TouchableWithoutFeedback, Platform, Keyboard } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../navigation/types";
 import { Picker } from "@react-native-picker/picker";
 import { firstService } from "../../services/firstService";
+import { SafeAreaView } from 'react-native-safe-area-context';
+
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Period'>;
 

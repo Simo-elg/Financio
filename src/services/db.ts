@@ -25,6 +25,7 @@ export async function initDB(): Promise<void> {
 
   await db.execAsync(`
     CREATE TABLE IF NOT EXISTS Debitamount (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
       amount REAL NOT NULL,
       clientId INTEGER NOT NULL,
       newAmount REAL NOT NULL);`);

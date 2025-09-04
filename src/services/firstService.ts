@@ -4,30 +4,25 @@ import { Client } from '../models/Client';
 export const firstService = {
 
     makeFClient: async (cl: Omit<Client, 'id'>): Promise<Client> => {
-        try {
-            const db = getDB();
-            const result = await db.runAsync(
-                'INSERT INTO Client (Name, Email, Password, Period) VALUES (?, ?, ?, ?);',
-                cl.Name,
-                cl.Email,
-                cl.Password,
-                cl.Period ?? ""
-            );
+        const db = getDB();
+        await db.runAsync(
+            'INSERT INTO Client (Name, Email, Password, Period) VALUES (?, ?, ?, ?);',
+            cl.Name, cl.Email, cl.Password, cl.Period ?? ''
+        );
 
-            const rows = await db.getAllAsync<{ rid: number }>(
-                'SELECT last_insert_rowid() AS rid;'
-            );
-            const id = rows[0].rid;
-            console.log("✅ Client créée :", cl);
-            console.log('ID du client: ', id);
-            return { id, ...cl, Period: cl.Period ?? "" };
+        const [{ rid: id }] = await db.getAllAsync<{ rid: number }>(
+            'SELECT last_insert_rowid() AS rid;'
+        );
 
-        } catch (err) {
+        // initialise la ligne Debitamount si absente
+        await db.runAsync(
+            `INSERT INTO Debitamount (clientId, amount, newAmount)
+            VALUES (?, 0, 0)
+            ON CONFLICT(clientId) DO NOTHING;`,
+            id
+        );
 
-            console.error("❌ Erreur à l’insertion du client :", err);
-            throw new Error("Failed to create Client");
-
-        }
+        return { id, ...cl, Period: cl.Period ?? '' };
     },
 
     getClient: async (id: number): Promise<Client> => {

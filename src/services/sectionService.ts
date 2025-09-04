@@ -1,6 +1,5 @@
 import { getDB } from './db';
 import { Section } from '../models/Section';
-import * as SQLite from 'expo-sqlite';
 
 /**
  * Service pour gérer les opérations CRUD sur la table Section
@@ -44,26 +43,26 @@ export const sectionService = {
     );
   },
 
-  updateBalance: async (id: number, delta: number, clientId: number) => {
+  updateBalance: async (id: number, delta: number) => {
     const db = getDB();
 
-    await db.runAsync(
-      'UPDATE Debitamount SET newAmount = newAmount + ? WHERE clientId = ?;',
-      delta,
-      clientId
-    );
+    console.log("Updating balance for Section ID:", id, "with delta:", delta);
 
     await db.runAsync(
-      'UPDATE Section SET currentBalance = currentBalance + ? WHERE id = ? AND clientId = ?;',
-      delta,
-      id,
-      clientId
+      'UPDATE Section SET currentBalance = currentBalance + ? WHERE id = ? ;',
+      delta, id
     );
+
+    console.log("Section table updated with delta:", delta);
   },
 
   deleteAll: async () => {
     const db = getDB();
-    await db.runAsync('DELETE FROM Section;',);
+    await db.runAsync(`DELETE FROM Client;
+      DELETE FROM Debitamount;
+      DELETE FROM Section;
+      DELETE FROM SubSection;
+      DELETE FROM Transactions;`,);
     console.log("All sections deleted");
   },
 
@@ -88,37 +87,39 @@ export const sectionService = {
     }
   },
 
-  createDebitAmount: async (amount: number, id: number): Promise<void> => {
+  createDebitAmount: async (amount: number, clientId: number): Promise<void> => {
     const db = getDB();
-
     await db.runAsync(
-      'INSERT INTO Debitamount (amount, clientId, newAmount) VALUES (?, ?, ?);',
-      amount,
-      id,
-      amount
+      `INSERT INTO Debitamount (clientId, amount, newAmount)
+      VALUES (?, ?, ?)
+      `,
+      clientId, amount, amount
     );
-    console.log("Le montant débit net est :", amount);
-    console.log("Et le client id est: ", id);
+  },
+
+  getAmounts: async (clientId: number): Promise<number[]> => {
+    const db = getDB();
+    const rows = await db.getAllAsync<{ amount: number }>(
+      'SELECT amount FROM Debitamount WHERE clientId = ?;',
+      clientId
+    );
+    return rows.map(r => r.amount);
   },
 
   getDebitAmount: async (clientId: number): Promise<number> => {
     const db = getDB();
-    const sql = `
-    SELECT amount
-    FROM Debitamount
-    WHERE clientId = ?
-    ORDER BY id DESC
-    LIMIT 1;
-  `;
-    const rows = await db.getAllAsync<{ amount: number }>(sql, [clientId]);
-    return rows.length ? rows[0].amount : 0;
+    const rows = await db.getAllAsync<{ newAmount: number }>(
+      'SELECT newAmount FROM Debitamount WHERE clientId = ? LIMIT 1;', clientId
+    );
+    return rows.length ? rows[0].newAmount : 0;
   },
+
 
   getTotalAmount: async (clientId: number): Promise<number> => {
     const db = getDB();
 
     const row = await db.getAllAsync<{ total: number }>(
-      'SELECT SUM(currentBalance) AS total FROM Section WHERE clientId = ?;',
+      'SELECT SUM(amount) AS total FROM Debitamount WHERE clientId = ?;',
       clientId
     );
 

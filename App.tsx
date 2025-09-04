@@ -4,6 +4,7 @@ import { initDB } from './src/services/db';
 import { SafeAreaView, Text, ActivityIndicator, StyleSheet } from 'react-native';
 import AppNavigator from './src/navigation/AppNavigator';
 import { Provider as PaperProvider } from 'react-native-paper';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import "./global.css";
 
 export default function App() {
@@ -34,9 +35,11 @@ export default function App() {
 
   // 3️⃣ Une fois prêt, on lance la navigation
   return (
-    <PaperProvider>
-      <AppNavigator />
-    </PaperProvider>
+    <SafeAreaProvider>
+      <PaperProvider>
+        <AppNavigator />
+      </PaperProvider>
+    </SafeAreaProvider>
   );
 }
 

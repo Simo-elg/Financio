@@ -4,6 +4,7 @@ import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../navigation/types";
 import { firstService } from "../services/firstService";  // <— import de ton service
 import { sectionService } from "../services/sectionService";
+import ExportDbButton from "../utils/ExportDbButton";
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Welcome'>;
 
@@ -31,6 +32,10 @@ export default function Welcome({ navigation }: Props) {
         } finally {
             setLoading(false);
         }
+    }
+
+    const handleSignUp = async () => {
+        navigation.navigate('SignUp');
     }
 
     const handleFirst = async () => {
@@ -81,7 +86,15 @@ export default function Welcome({ navigation }: Props) {
                 className="bg-blue-600 rounded-full py-3 mb-4"
             >
                 <Text className="text-center text-white font-semibold">
-                    {loading ? "Création..." : "S'inscrire"}
+                    {loading ? "Création..." : "Se connecter"}
+                </Text>
+            </Pressable>
+
+            <Pressable 
+                className="bg-blue-600 rounded-full py-3 mb-4"
+                onPress={handleSignUp} >
+                <Text className="text-center text-white font-semibold">
+                    S'inscrire
                 </Text>
             </Pressable>
 
@@ -102,6 +115,8 @@ export default function Welcome({ navigation }: Props) {
                     <Text>First Time Admin</Text>
                 </Pressable>
             </View>
+
+            <ExportDbButton></ExportDbButton>
 
         </View>
     );
